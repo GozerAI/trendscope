@@ -1,7 +1,7 @@
 """
 Trend Service - High-level service interface for executives.
 
-Provides a clean API for C-Suite executives to interact with the
+Provides a clean API for users and teams to interact with the
 trend intelligence system.
 """
 
@@ -28,18 +28,51 @@ from trendscope.intelligence import (
     TrendDrift,
 )
 from trendscope.alerts import AlertManager
-from trendscope.narratives import NarrativeGenerator
+try:
+    from trendscope.narratives import NarrativeGenerator
+except ImportError:
+    NarrativeGenerator = None
 from trendscope.licensing import license_gate
-from trendscope.scheduler import TrendScheduler
-from trendscope.anomaly import AnomalyDetector
-from trendscope.snapshots import SnapshotManager
-from trendscope.lifecycle import LifecycleTracker
-from trendscope.coverage import CoverageAnalyzer
-from trendscope.time_compare import TimeComparator
-from trendscope.feed import IntelligenceFeed
-from trendscope.integrations.kh_sync import KHSync
-from trendscope.integrations.kh_notifier import KHAnomalyNotifier
-from trendscope.autonomy import AutonomyDashboard
+try:
+    from trendscope.scheduler import TrendScheduler
+except ImportError:
+    TrendScheduler = None
+try:
+    from trendscope.anomaly import AnomalyDetector
+except ImportError:
+    AnomalyDetector = None
+try:
+    from trendscope.snapshots import SnapshotManager
+except ImportError:
+    SnapshotManager = None
+try:
+    from trendscope.lifecycle import LifecycleTracker
+except ImportError:
+    LifecycleTracker = None
+try:
+    from trendscope.coverage import CoverageAnalyzer
+except ImportError:
+    CoverageAnalyzer = None
+try:
+    from trendscope.time_compare import TimeComparator
+except ImportError:
+    TimeComparator = None
+try:
+    from trendscope.feed import IntelligenceFeed
+except ImportError:
+    IntelligenceFeed = None
+try:
+    from trendscope.integrations.kh_sync import KHSync
+except ImportError:
+    KHSync = None
+try:
+    from trendscope.integrations.kh_notifier import KHAnomalyNotifier
+except ImportError:
+    KHAnomalyNotifier = None
+try:
+    from trendscope.autonomy import AutonomyDashboard
+except ImportError:
+    AutonomyDashboard = None
 
 try:
     from trendscope.integrations.kh_client import get_artifacts, get_trending_artifacts, map_ts_category_to_kh
@@ -74,7 +107,7 @@ except ImportError:
 
 class TrendService:
     """
-    High-level trend intelligence service for C-Suite executives.
+    High-level trend intelligence service for users and teams.
 
     This service provides a unified interface for:
     - CMO (Echo): Market trends for campaign planning
@@ -112,26 +145,29 @@ class TrendService:
         self.intelligence = TrendIntelligenceManager(self.db)
         self.analyzer = TrendAnalyzer(self.db)
         self.alert_manager = AlertManager(self.db)
-        self.narrative_generator = NarrativeGenerator()
+        self.narrative_generator = NarrativeGenerator() if NarrativeGenerator is not None else None
 
         # Autonomy subsystems
-        self._scheduler = TrendScheduler()
-        self._anomaly_detector = AnomalyDetector(self.db)
-        self._snapshot_manager = SnapshotManager(self.db)
-        self._lifecycle_tracker = LifecycleTracker(self.db)
-        self._coverage_analyzer = CoverageAnalyzer(self.db)
-        self._time_comparator = TimeComparator(self.db)
-        self._feed = IntelligenceFeed()
-        self._kh_sync = KHSync(self.db)
-        self._kh_notifier = KHAnomalyNotifier(
+        self._scheduler = TrendScheduler() if TrendScheduler is not None else None
+        self._anomaly_detector = AnomalyDetector(self.db) if AnomalyDetector is not None else None
+        self._snapshot_manager = SnapshotManager(self.db) if SnapshotManager is not None else None
+        self._lifecycle_tracker = LifecycleTracker(self.db) if LifecycleTracker is not None else None
+        self._coverage_analyzer = CoverageAnalyzer(self.db) if CoverageAnalyzer is not None else None
+        self._time_comparator = TimeComparator(self.db) if TimeComparator is not None else None
+        self._feed = IntelligenceFeed() if IntelligenceFeed is not None else None
+        self._kh_sync = KHSync(self.db) if KHSync is not None else None
+        self._kh_notifier = None
+        if KHAnomalyNotifier is not None:
+            self._kh_notifier = KHAnomalyNotifier(
             kh_base_url=os.environ.get("KH_BASE_URL", "http://localhost:8011")
         )
-        self._autonomy_dashboard = AutonomyDashboard(self)
+        self._autonomy_dashboard = AutonomyDashboard(self) if AutonomyDashboard is not None else None
 
         # Register default schedules (callbacks are no-ops initially)
-        self._scheduler.register("refresh_trends", 60.0, lambda: None)
-        self._scheduler.register("detect_anomalies", 120.0, lambda: None)
-        self._scheduler.register("anomaly_scan_and_notify", 360.0, lambda: self.detect_anomalies(lookback_days=1))
+        if self._scheduler is not None:
+            self._scheduler.register("refresh_trends", 60.0, lambda: None)
+            self._scheduler.register("detect_anomalies", 120.0, lambda: None)
+            self._scheduler.register("anomaly_scan_and_notify", 360.0, lambda: self.detect_anomalies(lookback_days=1))
 
         self._initialized = False
         self._last_refresh: Optional[datetime] = None
@@ -368,7 +404,7 @@ class TrendService:
             return base_report
 
         # Add narrative briefing
-        narrative = self.narrative_generator.generate_briefing(executive_code, report)
+        narrative = self.narrative_generator.generate_briefing(executive_code, report) if self.narrative_generator is not None else None
         report["narrative"] = narrative
         return report
 
@@ -561,7 +597,7 @@ class TrendService:
     # Scheduler
     # =========================================================================
 
-    def get_scheduler(self) -> TrendScheduler:
+    def get_scheduler(self) -> "TrendScheduler":
         """Get the scheduler instance."""
         return self._scheduler
 
@@ -571,6 +607,8 @@ class TrendService:
 
     def detect_anomalies(self, lookback_days: int = 14) -> list:
         """Run anomaly detection on all trends."""
+        if self._anomaly_detector is None:
+            raise RuntimeError("This feature requires a commercial license. Visit https://gozerai.com/pricing")
         results = self._anomaly_detector.detect_all(lookback_days=lookback_days)
         if results:
             self._feed.push_event("anomaly.detected", {
@@ -675,10 +713,14 @@ class TrendService:
 
     def get_system_pulse(self) -> dict:
         """Get full system pulse."""
+        if self._autonomy_dashboard is None:
+            raise RuntimeError("This feature requires a commercial license. Visit https://gozerai.com/pricing")
         return self._autonomy_dashboard.get_system_pulse()
 
     def get_autonomy_timeline(self, hours: int = 24) -> list:
         """Get autonomy timeline."""
+        if self._autonomy_dashboard is None:
+            raise RuntimeError("This feature requires a commercial license. Visit https://gozerai.com/pricing")
         return self._autonomy_dashboard.get_timeline(hours)
 
     def get_health_score(self) -> int:
