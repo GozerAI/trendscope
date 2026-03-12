@@ -1,4 +1,4 @@
-# Commercial Licensing — Trendscope
+# Commercial Licensing — trendscope
 
 This project is dual-licensed:
 
@@ -13,7 +13,7 @@ This project is dual-licensed:
 | Advanced features | — | Yes | Yes |
 | Enterprise features | — | — | Yes |
 
-Part of the **GozerAI ecosystem**. See pricing at **https://gozerai.com/pricing**.
+Part of the **standalone bundle** (STD). See pricing at **https://gozerai.com/pricing**.
 
 ```bash
 export VINZY_LICENSE_KEY="your-key-here"

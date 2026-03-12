@@ -11,6 +11,9 @@ from typing import Optional
 import httpx
 from fastapi import FastAPI, Depends, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from slowapi.util import get_remote_address
 
 from trendscope.service import TrendService
 
@@ -35,6 +38,10 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="TrendScope", version="0.1.0", lifespan=lifespan)
+
+limiter = Limiter(key_func=get_remote_address)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 app.add_middleware(
     CORSMiddleware,
@@ -88,6 +95,26 @@ def _svc() -> TrendService:
     if _service is None:
         raise HTTPException(status_code=503, detail="Service not initialized")
     return _service
+
+
+def _validate_webhook_url(url: str) -> bool:
+    """Validate webhook URL to prevent SSRF attacks."""
+    from urllib.parse import urlparse
+    import socket
+    import ipaddress
+    try:
+        parsed = urlparse(url)
+        if parsed.scheme not in ("http", "https"):
+            return False
+        if not parsed.hostname:
+            return False
+        ip = socket.gethostbyname(parsed.hostname)
+        addr = ipaddress.ip_address(ip)
+        if addr.is_private or addr.is_loopback or addr.is_link_local:
+            return False
+        return True
+    except Exception:
+        return False
 
 
 # ── Basic endpoints (trendscope:basic) ────────────────────────────────────────
@@ -252,7 +279,9 @@ async def get_executive_narrative(
 
 
 @app.post("/v1/refresh")
+@limiter.limit("30/minute")
 async def refresh_trends(
+    request: Request,
     tenant: dict = Depends(require_entitlement("trendscope:full")),
 ):
     return await _svc().refresh_trends()
@@ -292,9 +321,12 @@ async def get_credibility(tenant=Depends(require_entitlement("trendscope:full"))
 @app.post("/v1/alerts")
 async def create_alert(request: Request, tenant=Depends(require_entitlement("trendscope:full"))):
     body = await request.json()
+    webhook_url = body["webhook_url"]
+    if not _validate_webhook_url(webhook_url):
+        raise HTTPException(status_code=400, detail="Invalid webhook URL: must be a public HTTP(S) endpoint")
     rule = _svc().register_alert_rule(
         name=body["name"], conditions=body["conditions"],
-        webhook_url=body["webhook_url"], secret=body.get("webhook_secret", ""),
+        webhook_url=webhook_url, secret=body.get("webhook_secret", ""),
     )
     return {"id": rule.id, "name": rule.name, "created_at": rule.created_at}
 
@@ -326,14 +358,15 @@ async def kh_webhook(request: Request):
     """Receive webhook events from Knowledge Harvester."""
     body = await request.body()
 
-    # Verify HMAC signature if secret is configured
-    if KH_WEBHOOK_SECRET:
-        signature = request.headers.get("X-Webhook-Signature", "")
-        expected = "sha256=" + hmac.new(
-            KH_WEBHOOK_SECRET.encode(), body, hashlib.sha256
-        ).hexdigest()
-        if not hmac.compare_digest(signature, expected):
-            raise HTTPException(status_code=401, detail="Invalid webhook signature")
+    # Verify HMAC signature -- reject if secret not configured
+    if not KH_WEBHOOK_SECRET:
+        raise HTTPException(status_code=503, detail="Webhook verification not configured")
+    signature = request.headers.get("X-Webhook-Signature", "")
+    expected = "sha256=" + hmac.new(
+        KH_WEBHOOK_SECRET.encode(), body, hashlib.sha256
+    ).hexdigest()
+    if not hmac.compare_digest(signature, expected):
+        raise HTTPException(status_code=401, detail="Invalid webhook signature")
 
     try:
         payload = json.loads(body)
@@ -551,8 +584,17 @@ async def get_feed_summary(
 
 @app.post("/v1/webhooks/kh/intelligence")
 async def kh_intelligence_webhook(request: Request):
-    body = await request.json()
-    return _svc().receive_kh_intelligence(body)
+    body = await request.body()
+    secret = os.environ.get("KH_WEBHOOK_SECRET", "")
+    if not secret:
+        raise HTTPException(status_code=503, detail="Webhook verification not configured")
+    signature = request.headers.get("X-Webhook-Signature", "")
+    expected = "sha256=" + hmac.new(secret.encode(), body, hashlib.sha256).hexdigest()
+    if not hmac.compare_digest(signature, expected):
+        raise HTTPException(status_code=401, detail="Invalid webhook signature")
+    import json as _json
+    payload = _json.loads(body)
+    return _svc().receive_kh_intelligence(payload)
 
 
 @app.get("/v1/sync/status")
@@ -578,6 +620,18 @@ async def get_autonomy_timeline(
 @app.get("/v1/autonomy/health")
 async def get_autonomy_health(tenant=Depends(require_entitlement("trendscope:full"))):
     return {"health_score": _svc().get_health_score()}
+
+
+# ── Security headers middleware ────────────────────────────────────────────────
+
+@app.middleware("http")
+async def security_headers(request, call_next):
+    response = await call_next(request)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["X-XSS-Protection"] = "1; mode=block"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    return response
 
 
 if __name__ == "__main__":

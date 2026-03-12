@@ -1,47 +1,33 @@
 # Trendscope
 
-**AI-powered trend analysis and market intelligence** — Part of the [GozerAI](https://gozerai.com) ecosystem.
+Market trend intelligence for niche identification and opportunity detection.
 
 ## Overview
 
-Trendscope is a Python library for collecting, analyzing, and scoring market trends across multiple platforms. It identifies niche opportunities, detects trend drift, finds cross-platform correlations, and generates actionable buy/sell signals.
+Trendscope is a Python library for collecting, analyzing, and scoring market trends across multiple platforms. It identifies niche opportunities, detects trend drift, finds cross-platform correlations, and generates actionable buy/sell signals -- all using the Python standard library with zero external dependencies.
 
-## Features (Community Tier)
+## Features
 
-- **Multi-source collection** — Pluggable collectors for Google Trends, Reddit, Hacker News, and Product Hunt
-- **Trend analysis** — Velocity, momentum, and composite scoring with lifecycle classification
-- **Niche identification** — Automatic detection of market opportunities
-- **Drift detection** — Alerts when trends surge, decline, or exhibit unusual volatility
-- **SQLite persistence** — Built-in trend database with history tracking
-
-### Pro Features (requires license)
-
-- Advanced anomaly detection
-- Forecasting and predictive models
-- Trend intelligence and correlation engine
-- Narrative extraction
-- Credibility scoring
-- Real-time feed
-
-### Enterprise Features (requires license)
-
-- Autonomous analysis pipelines
-- Scheduled analysis
-- Trend snapshots and time-travel comparison
-- Lifecycle tracking and coverage analysis
-- External integrations (Knowledge Harvester, graph sync)
-
-Visit [gozerai.com/pricing](https://gozerai.com/pricing) for Pro and Enterprise tier details.
+- **Multi-source collection** -- Pluggable collectors for Google Trends, Reddit, Hacker News, and Product Hunt
+- **Trend analysis** -- Velocity, momentum, and composite scoring with lifecycle classification (emerging, growing, peak, declining, stable)
+- **Niche identification** -- Automatic detection of market opportunities from keyword clustering and trend convergence
+- **Drift detection** -- Alerts when trends surge, decline, or exhibit unusual volatility
+- **Cross-platform correlation** -- Discovers relationships between trends across different sources
+- **Opportunity scoring** -- Weighted scoring across trend strength, growth velocity, market gap, entry feasibility, and timing
+- **Buy/sell signals** -- Trading-style signals (strong buy, buy, hold, sell, strong sell) based on composite metrics
+- **SQLite persistence** -- Built-in trend database with history tracking and indexed queries
+- **Executive reports** -- Tailored intelligence reports by role (CMO, CPO, CRO, CEO)
+- **Autonomous analysis** -- Full refresh-analyze-identify-report cycle in a single call
 
 ## Installation
 
-```bash
+```
 pip install trendscope
 ```
 
 For development:
 
-```bash
+```
 pip install -e ".[dev]"
 ```
 
@@ -67,12 +53,25 @@ async def main():
     # Get buy/sell signals
     signals = await service.get_signals()
 
+    # Generate an executive report
+    report = await service.get_executive_report("CMO")
+
 asyncio.run(main())
+```
+
+## Architecture
+
+```
+src/trendscope/
+    core.py          Data models, SQLite database, trend analyzer
+    collectors.py    Source collectors and niche identifier
+    intelligence.py  Correlation, drift detection, opportunity scoring
+    service.py       High-level service API
 ```
 
 ## Running Tests
 
-```bash
+```
 pytest tests/ -v
 ```
 
@@ -83,14 +82,8 @@ pytest tests/ -v
 
 ## License
 
-This project is dual-licensed:
+MIT License. See [LICENSE](LICENSE) for details.
 
-- **AGPL-3.0** — For open-source use (see [LICENSE](LICENSE))
-- **Commercial** — For proprietary integration
+## Author
 
-Contact chris@gozerai.com for commercial licensing.
-
-## Links
-
-- [GozerAI Ecosystem](https://gozerai.com)
-- [Pricing](https://gozerai.com/pricing)
+Chris Arseno

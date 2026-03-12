@@ -22,7 +22,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
 
       - name: Install gozerai-telemetry
-        run: pip install "gozerai-telemetry"
+        run: pip install "gozerai-telemetry @ git+https://github.com/GozerAI/gozerai-telemetry.git"
 
       - name: Install dependencies
         run: |

@@ -539,14 +539,18 @@ class TrendDatabase:
 
     def search_trends(self, query: str, limit: int = 20) -> List[Trend]:
         """Search trends by name or keywords."""
+        # Escape LIKE wildcards in user input
+        escaped = query.replace("%", r"\%").replace("_", r"\_")
         with sqlite3.connect(self.db_path) as conn:
             conn.row_factory = sqlite3.Row
             rows = conn.execute("""
                 SELECT * FROM trends
-                WHERE name LIKE ? OR description LIKE ? OR keywords LIKE ?
+                WHERE name LIKE ? ESCAPE '\'
+                   OR description LIKE ? ESCAPE '\'
+                   OR keywords LIKE ? ESCAPE '\'
                 ORDER BY score DESC
                 LIMIT ?
-            """, (f"%{query}%", f"%{query}%", f"%{query}%", limit)).fetchall()
+            """, (f"%{escaped}%", f"%{escaped}%", f"%{escaped}%", limit)).fetchall()
             return [self._row_to_trend(row) for row in rows]
 
     def get_trend_history(

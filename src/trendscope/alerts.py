@@ -138,6 +138,8 @@ class AlertManager:
                     triggered.append(result)
         return triggered
 
+    ALLOWED_ALERT_FIELDS = {"score", "volume", "sentiment", "momentum", "category", "source", "velocity"}
+
     def _check_conditions(self, conditions, trend):
         """Check if all conditions match a trend."""
         for cond in conditions:
@@ -148,6 +150,10 @@ class AlertManager:
             field_name = cond.get("field", "")
             op = cond.get("operator", "")
             threshold = cond.get("threshold", 0)
+
+            if field_name not in self.ALLOWED_ALERT_FIELDS:
+                logger.warning("Invalid alert field: %s", field_name)
+                return False
 
             value = getattr(trend, field_name, None)
             if value is None:
@@ -192,6 +198,20 @@ class AlertManager:
 
     def _deliver_webhook(self, url, payload, secret=""):
         """Deliver webhook with optional HMAC signing. Returns delivery status."""
+        # Validate URL to prevent SSRF
+        from urllib.parse import urlparse
+        import socket
+        import ipaddress as _ipaddress
+        try:
+            parsed = urlparse(url)
+            if parsed.scheme not in ("http", "https") or not parsed.hostname:
+                return "failed:invalid_url"
+            ip = socket.gethostbyname(parsed.hostname)
+            addr = _ipaddress.ip_address(ip)
+            if addr.is_private or addr.is_loopback or addr.is_link_local:
+                return "failed:private_url"
+        except Exception:
+            return "failed:url_validation"
         try:
             body = json.dumps(payload).encode("utf-8")
             req = Request(url, data=body, headers={"Content-Type": "application/json"})
