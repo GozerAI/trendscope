@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TrendScope — Trend intelligence, automated</title>
+    <style>
+        :root {
+            --bg: #0a0a0f;
+            --bg-card: #12121a;
+            --bg-hover: #1a1a25;
+            --border: #222230;
+            --text: #e8e8ed;
+            --text-muted: #888894;
+            --accent: #4a6cf7;
+            --accent-hover: #5b7af8;
+            --success: #34d399;
+            --warning: #fbbf24;
+            --error: #f87171;
+            --radius: 8px;
+        }
+
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        a { color: inherit; text-decoration: none; }
+
+        /* Nav */
+        .nav {
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem 2rem;
+            border-bottom: 1px solid var(--border);
+            background: rgba(10, 10, 15, 0.92);
+            backdrop-filter: blur(8px);
+        }
+        .nav-logo { font-size: 1.15rem; font-weight: 700; letter-spacing: -0.01em; }
+        .nav-logo .dot { color: var(--accent); }
+        .nav-links { display: flex; align-items: center; gap: 0.25rem; list-style: none; }
+        .nav-links a {
+            padding: 0.45rem 0.85rem;
+            border-radius: var(--radius);
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            transition: color 0.15s, background 0.15s;
+        }
+        .nav-links a:hover { color: var(--text); background: var(--bg-hover); }
+        .nav-cta {
+            padding: 0.5rem 1.1rem !important;
+            background: var(--accent) !important;
+            color: white !important;
+            border-radius: var(--radius) !important;
+            font-weight: 500 !important;
+        }
+        .nav-cta:hover { background: var(--accent-hover) !important; }
+
+        /* Hero */
+        .hero {
+            max-width: 760px;
+            margin: 0 auto;
+            padding: 7rem 2rem 5rem;
+            text-align: center;
+        }
+        .hero-eyebrow {
+            display: inline-block;
+            font-size: 0.8rem;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--accent);
+            background: rgba(74, 108, 247, 0.1);
+            border: 1px solid rgba(74, 108, 247, 0.25);
+            border-radius: 20px;
+            padding: 0.3rem 0.85rem;
+            margin-bottom: 1.5rem;
+        }
+        .hero h1 {
+            font-size: clamp(2.4rem, 5vw, 3.6rem);
+            font-weight: 800;
+            line-height: 1.1;
+            letter-spacing: -0.03em;
+            margin-bottom: 1.25rem;
+        }
+        .hero h1 .accent { color: var(--accent); }
+        .hero-sub {
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            max-width: 520px;
+            margin: 0 auto 2.5rem;
+            line-height: 1.7;
+        }
+        .hero-actions { display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap; }
+        .hero-note { margin-top: 1.25rem; font-size: 0.82rem; color: var(--text-muted); }
+
+        /* Buttons */
+        .btn-primary {
+            display: inline-block;
+            padding: 0.8rem 1.75rem;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: var(--radius);
+            font-size: 0.97rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+        .btn-primary:hover { background: var(--accent-hover); }
+        .btn-secondary {
+            display: inline-block;
+            padding: 0.8rem 1.75rem;
+            background: transparent;
+            color: var(--text-muted);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            font-size: 0.97rem;
+            cursor: pointer;
+            transition: color 0.15s, border-color 0.15s;
+        }
+        .btn-secondary:hover { color: var(--text); border-color: #444; }
+
+        /* Sections */
+        section { padding: 5rem 2rem; }
+        .section-inner { max-width: 900px; margin: 0 auto; }
+        .section-label {
+            font-size: 0.78rem;
+            font-weight: 600;
+            letter-spacing: 0.09em;
+            text-transform: uppercase;
+            color: var(--accent);
+            margin-bottom: 0.75rem;
+        }
+        .section-title {
+            font-size: clamp(1.6rem, 3vw, 2.1rem);
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            margin-bottom: 1rem;
+        }
+        .section-desc {
+            color: var(--text-muted);
+            font-size: 1rem;
+            max-width: 540px;
+            line-height: 1.7;
+            margin-bottom: 3rem;
+        }
+
+        /* Steps */
+        .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.5rem; }
+        .step { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 1.75rem; }
+        .step-number {
+            width: 32px; height: 32px;
+            background: rgba(74, 108, 247, 0.12);
+            border: 1px solid rgba(74, 108, 247, 0.25);
+            border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.8rem; font-weight: 700; color: var(--accent);
+            margin-bottom: 1rem;
+        }
+        .step h3 { font-size: 1rem; font-weight: 600; margin-bottom: 0.5rem; }
+        .step p { color: var(--text-muted); font-size: 0.9rem; line-height: 1.6; }
+
+        /* Features */
+        #features { border-top: 1px solid var(--border); }
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 1px;
+            background: var(--border);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        .feature-cell { background: var(--bg-card); padding: 1.75rem; transition: background 0.15s; }
+        .feature-cell:hover { background: var(--bg-hover); }
+        .feature-tag {
+            display: inline-block;
+            font-size: 0.72rem; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase;
+            color: var(--text-muted);
+            background: rgba(136, 136, 148, 0.1);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 0.15rem 0.45rem;
+            margin-bottom: 0.85rem;
+        }
+        .feature-cell h3 { font-size: 0.97rem; font-weight: 600; margin-bottom: 0.45rem; }
+        .feature-cell p { font-size: 0.875rem; color: var(--text-muted); line-height: 1.55; }
+
+        /* Pricing */
+        #pricing { border-top: 1px solid var(--border); }
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.25rem;
+            max-width: 640px;
+        }
+        .pricing-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 2rem; }
+        .pricing-card.featured {
+            border-color: rgba(74, 108, 247, 0.5);
+            background: linear-gradient(160deg, rgba(74,108,247,0.06) 0%, var(--bg-card) 60%);
+        }
+        .pricing-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.75rem; margin-bottom: 1.25rem; }
+        .pricing-tier { font-size: 0.8rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); }
+        .founder-badge {
+            font-size: 0.68rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;
+            padding: 0.2rem 0.55rem; border-radius: 12px;
+            background: linear-gradient(135deg, var(--accent), #a855f7);
+            color: white; white-space: nowrap;
+        }
+        .pricing-price { font-size: 2.25rem; font-weight: 800; letter-spacing: -0.03em; line-height: 1; margin-bottom: 0.35rem; }
+        .pricing-price .period { font-size: 0.9rem; font-weight: 400; color: var(--text-muted); }
+        .pricing-strike { font-size: 0.9rem; color: var(--text-muted); text-decoration: line-through; margin-bottom: 0.25rem; }
+        .pricing-lock { font-size: 0.78rem; color: var(--text-muted); font-style: italic; margin-bottom: 1.5rem; }
+        .pricing-divider { height: 1px; background: var(--border); margin: 1.25rem 0; }
+        .pricing-features { list-style: none; display: flex; flex-direction: column; gap: 0.6rem; margin-bottom: 1.75rem; }
+        .pricing-features li { display: flex; align-items: flex-start; gap: 0.6rem; font-size: 0.875rem; color: var(--text-muted); }
+        .pricing-features li .check {
+            width: 16px; height: 16px; border-radius: 50%;
+            background: rgba(52, 211, 153, 0.12);
+            border: 1px solid rgba(52, 211, 153, 0.25);
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0; margin-top: 2px;
+        }
+        .pricing-features li .check::after { content: ""; width: 5px; height: 5px; border-radius: 50%; background: var(--success); }
+        .pricing-features li.included { color: var(--text); }
+        .pricing-card .btn-primary,
+        .pricing-card .btn-secondary { width: 100%; text-align: center; }
+
+        /* CTA */
+        .cta-section { border-top: 1px solid var(--border); text-align: center; }
+        .cta-section h2 { font-size: clamp(1.6rem, 3vw, 2.2rem); font-weight: 700; letter-spacing: -0.02em; margin-bottom: 1rem; }
+        .cta-section p { color: var(--text-muted); font-size: 1rem; margin-bottom: 2rem; }
+
+        /* Footer */
+        footer { border-top: 1px solid var(--border); padding: 2rem; text-align: center; color: var(--text-muted); font-size: 0.85rem; }
+        footer a { color: var(--accent); }
+        footer a:hover { text-decoration: underline; }
+
+        /* Responsive */
+        @media (max-width: 640px) {
+            .nav { padding: 1rem; }
+            .nav-links { gap: 0; }
+            .nav-links li:not(:last-child) { display: none; }
+            .hero { padding: 5rem 1.25rem 3.5rem; }
+            section { padding: 3.5rem 1.25rem; }
+            .pricing-grid { max-width: 100%; }
+        }
+        @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+    </style>
+</head>
+<body>
+
+<nav class="nav" aria-label="Main navigation">
+    <a href="/" class="nav-logo">trend<span class="dot">scope</span></a>
+    <ul class="nav-links" role="list">
+        <li><a href="#features">Features</a></li>
+        <li><a href="#pricing">Pricing</a></li>
+        <li><a href="/dashboard" class="nav-cta">Sign In</a></li>
+    </ul>
+</nav>
+
+<section class="hero" aria-labelledby="hero-heading">
+    <div class="hero-eyebrow">Market intelligence platform</div>
+    <h1 id="hero-heading">
+        Trend intelligence,<br><span class="accent">automated.</span>
+    </h1>
+    <p class="hero-sub">
+        TrendScope tracks market signals across categories, detects emerging opportunities before they peak,
+        and alerts you when trends shift — so you can act on intelligence, not noise.
+    </p>
+    <div class="hero-actions">
+        <a href="/dashboard" class="btn-primary">Open Dashboard</a>
+        <a href="#features" class="btn-secondary">See features</a>
+    </div>
+    <p class="hero-note">No credit card required for free tier.</p>
+</section>
+
+<section aria-labelledby="how-heading">
+    <div class="section-inner">
+        <p class="section-label">How it works</p>
+        <h2 class="section-title" id="how-heading">From signal to decision in three steps</h2>
+        <p class="section-desc">TrendScope handles the entire intelligence pipeline — you get actionable output without managing data pipelines or writing queries.</p>
+        <div class="steps">
+            <div class="step">
+                <div class="step-number" aria-hidden="true">1</div>
+                <h3>Connect data sources</h3>
+                <p>Point TrendScope at your categories of interest. It continuously ingests signals from web, market, and behavioural data streams without any manual configuration.</p>
+            </div>
+            <div class="step">
+                <div class="step-number" aria-hidden="true">2</div>
+                <h3>AI analyzes trends</h3>
+                <p>The analysis engine scores each signal for strength, velocity, and credibility — then clusters related signals into coherent trends with lifecycle tracking.</p>
+            </div>
+            <div class="step">
+                <div class="step-number" aria-hidden="true">3</div>
+                <h3>Get actionable intelligence</h3>
+                <p>Receive structured reports, drift alerts, and buy/hold/sell signals via the dashboard or API. Act on intelligence your competitors don’t have yet.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section id="features" aria-labelledby="features-heading">
+    <div class="section-inner">
+        <p class="section-label">Features</p>
+        <h2 class="section-title" id="features-heading">Everything you need to stay ahead</h2>
+        <p class="section-desc">A complete intelligence stack — from raw signal ingestion to executive-ready reports.</p>
+        <div class="features-grid" role="list">
+            <div class="feature-cell" role="listitem">
+                <div class="feature-tag">Core</div>
+                <h3>Trend Tracking</h3>
+                <p>Score, rank, and monitor trends across technology, ecommerce, finance, health, and more. Filter by category, velocity, or signal strength.</p>
+            </div>
+            <div class="feature-cell" role="listitem">
+                <div class="feature-tag">Pro</div>
+                <h3>Opportunity Detection</h3>
+                <p>Surface high-score opportunities with urgency ratings before they hit mainstream attention. Includes context on why each opportunity ranked.</p>
+            </div>
+            <div class="feature-cell" role="listitem">
+                <div class="feature-tag">Pro</div>
+                <h3>Intelligence Reports</h3>
+                <p>Executive-ready summaries generated per role — CMO, CPO, CRO, CEO. Each report is tailored to the strategic questions that role cares about.</p>
+            </div>
+            <div class="feature-cell" role="listitem">
+                <div class="feature-tag">Pro</div>
+                <h3>Drift Alerts</h3>
+                <p>Get notified when a trend direction changes materially. Lookback windows are configurable — catch reversals within days, not weeks.</p>
+            </div>
+            <div class="feature-cell" role="listitem">
+                <div class="feature-tag">Pro</div>
+                <h3>Anomaly Detection</h3>
+                <p>Identify spikes, drops, and out-of-range behaviour across your tracked trends. Severity-rated so you prioritise what actually matters.</p>
+            </div>
+            <div class="feature-cell" role="listitem">
+                <div class="feature-tag">Pro</div>
+                <h3>Trend Forecasting</h3>
+                <p>Short-horizon momentum forecasts built from historical velocity data. Know whether a trend is likely to continue, peak, or reverse.</p>
+            </div>
+            <div class="feature-cell" role="listitem">
+                <div class="feature-tag">Pro</div>
+                <h3>Correlation Engine</h3>
+                <p>Discover which trends move together. Use correlation data to build hedged positioning or validate cross-category hypotheses.</p>
+            </div>
+            <div class="feature-cell" role="listitem">
+                <div class="feature-tag">Pro</div>
+                <h3>API Access</h3>
+                <p>Full REST API with all Pro features available programmatically. Integrate trend intelligence directly into your dashboards, models, or pipelines.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section id="pricing" aria-labelledby="pricing-heading">
+    <div class="section-inner">
+        <p class="section-label">Pricing</p>
+        <h2 class="section-title" id="pricing-heading">Simple, transparent pricing</h2>
+        <p class="section-desc">Start free. Upgrade when you need the full intelligence stack. Founder rates lock in permanently — no price increases.</p>
+        <div class="pricing-grid">
+
+            <div class="pricing-card">
+                <div class="pricing-header">
+                    <p class="pricing-tier">Free</p>
+                </div>
+                <p class="pricing-price">$0 <span class="period">/ mo</span></p>
+                <p class="pricing-lock">No credit card required.</p>
+                <div class="pricing-divider"></div>
+                <ul class="pricing-features">
+                    <li class="included"><span class="check" aria-hidden="true"></span>Trend tracking (50 trends)</li>
+                    <li class="included"><span class="check" aria-hidden="true"></span>Top &amp; emerging trend feeds</li>
+                    <li class="included"><span class="check" aria-hidden="true"></span>Basic search and filtering</li>
+                    <li><span class="check" aria-hidden="true"></span>Opportunity detection</li>
+                    <li><span class="check" aria-hidden="true"></span>Intelligence reports</li>
+                    <li><span class="check" aria-hidden="true"></span>Drift alerts &amp; anomalies</li>
+                </ul>
+                <a href="/dashboard" class="btn-secondary">Get started free</a>
+            </div>
+
+            <div class="pricing-card featured">
+                <div class="pricing-header">
+                    <p class="pricing-tier">Pro</p>
+                    <span class="founder-badge">Founder Rate</span>
+                </div>
+                <p class="pricing-price">$19 <span class="period">/ mo</span></p>
+                <p class="pricing-strike">$29 / mo</p>
+                <p class="pricing-lock">Locks in for life — never increases.</p>
+                <div class="pricing-divider"></div>
+                <ul class="pricing-features">
+                    <li class="included"><span class="check" aria-hidden="true"></span>Everything in Free</li>
+                    <li class="included"><span class="check" aria-hidden="true"></span>Unlimited trend tracking</li>
+                    <li class="included"><span class="check" aria-hidden="true"></span>Opportunity detection</li>
+                    <li class="included"><span class="check" aria-hidden="true"></span>Intelligence reports (CMO, CPO, CRO, CEO)</li>
+                    <li class="included"><span class="check" aria-hidden="true"></span>Drift alerts &amp; anomaly detection</li>
+                    <li class="included"><span class="check" aria-hidden="true"></span>Forecasting &amp; correlation engine</li>
+                    <li class="included"><span class="check" aria-hidden="true"></span>Full API access</li>
+                </ul>
+                <a href="/dashboard" class="btn-primary">Claim founder rate</a>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+<section class="cta-section" aria-labelledby="cta-heading">
+    <div class="section-inner">
+        <h2 id="cta-heading">Start tracking what matters.</h2>
+        <p>Free tier, no credit card, no setup. Open the dashboard and connect in under a minute.</p>
+        <a href="/dashboard" class="btn-primary">Open Dashboard</a>
+    </div>
+</section>
+
+<footer>
+    <p>2026 TrendScope. Built by <a href="https://gozerai.com" rel="noopener">GozerAI</a>.</p>
+</footer>
+
+</body>
+</html>

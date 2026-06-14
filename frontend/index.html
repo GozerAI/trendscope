@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TrendScope</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<div id="app">
+
+    <!-- Login view -->
+    <div id="login-view" class="view">
+        <div class="auth-container">
+            <h1>trend<span class="dot">scope</span></h1>
+            <p class="tagline">Trend intelligence API</p>
+            <form id="login-form">
+                <input type="email" id="login-email" placeholder="Email" required autocomplete="email">
+                <input type="password" id="login-password" placeholder="Password" required autocomplete="current-password">
+                <div id="login-error" class="form-error" role="alert"></div>
+                <button type="submit" class="btn-primary" id="login-btn">Sign In</button>
+            </form>
+            <p class="alt-action">No account? <a href="#" id="show-register">Create one</a></p>
+        </div>
+    </div>
+
+    <!-- Register view -->
+    <div id="register-view" class="view hidden">
+        <div class="auth-container">
+            <h1>trend<span class="dot">scope</span></h1>
+            <p class="tagline">Create your account</p>
+            <form id="register-form">
+                <input type="text" id="reg-name" placeholder="Your name" required>
+                <input type="email" id="reg-email" placeholder="Email" required autocomplete="email">
+                <input type="password" id="reg-password" placeholder="Password (8+ characters)" required minlength="8" autocomplete="new-password">
+                <div id="register-error" class="form-error" role="alert"></div>
+                <button type="submit" class="btn-primary" id="register-btn">Create Account</button>
+            </form>
+            <p class="alt-action">Already have an account? <a href="#" id="show-login">Sign in</a></p>
+        </div>
+    </div>
+
+    <!-- Dashboard -->
+    <div id="dashboard-view" class="view hidden">
+        <header>
+            <div class="header-left">
+                <h1>trend<span class="dot">scope</span></h1>
+                <span id="plan-badge" class="plan-badge"></span>
+            </div>
+            <nav aria-label="Dashboard navigation">
+                <button class="nav-link active" data-page="trends" aria-current="page">Trends</button>
+                <button class="nav-link" data-page="opportunities">Opportunities</button>
+                <button class="nav-link" data-page="intelligence">Intelligence</button>
+                <button class="nav-link" data-page="drift">Drift Alerts</button>
+                <button class="nav-link" data-page="settings">Settings</button>
+                <button class="nav-link" data-page="billing">Billing</button>
+            </nav>
+            <div class="header-right">
+                <span id="header-user" class="user-info"></span>
+                <button id="logout-btn" class="btn-secondary btn-sm" aria-label="Sign out">Sign out</button>
+            </div>
+        </header>
+
+        <main>
+
+            <!-- Trends page -->
+            <div id="page-trends" class="page active" role="main">
+                <div class="page-header">
+                    <h2>Trends</h2>
+                    <div class="page-header-actions">
+                        <button id="refresh-btn" class="btn-secondary btn-sm">Refresh</button>
+                    </div>
+                </div>
+                <div class="stats-row" id="trends-stats"></div>
+                <div class="filters-bar">
+                    <input type="search" id="trend-search" class="search-input" placeholder="Search trends..." aria-label="Search trends">
+                    <select id="category-filter" class="filter-select" aria-label="Filter by category">
+                        <option value="">All categories</option>
+                        <option value="technology">Technology</option>
+                        <option value="ecommerce">Ecommerce</option>
+                        <option value="social">Social</option>
+                        <option value="cultural">Cultural</option>
+                        <option value="business">Business</option>
+                        <option value="consumer">Consumer</option>
+                        <option value="lifestyle">Lifestyle</option>
+                        <option value="health">Health</option>
+                        <option value="finance">Finance</option>
+                        <option value="entertainment">Entertainment</option>
+                    </select>
+                    <select id="sort-filter" class="filter-select" aria-label="Sort by">
+                        <option value="score">Sort: Score</option>
+                        <option value="velocity">Sort: Velocity</option>
+                        <option value="status">Sort: Status</option>
+                    </select>
+                </div>
+                <div id="trends-list" class="trend-list" aria-live="polite"></div>
+            </div>
+
+            <!-- Opportunities page -->
+            <div id="page-opportunities" class="page" role="main">
+                <div class="page-header">
+                    <h2>Opportunities</h2>
+                </div>
+                <div id="opportunities-list" class="opportunity-grid" aria-live="polite"></div>
+            </div>
+
+            <!-- Intelligence page -->
+            <div id="page-intelligence" class="page" role="main">
+                <div class="page-header">
+                    <h2>Intelligence Report</h2>
+                </div>
+                <div id="intelligence-content" aria-live="polite"></div>
+            </div>
+
+            <!-- Drift Alerts page -->
+            <div id="page-drift" class="page" role="main">
+                <div class="page-header">
+                    <h2>Drift Alerts</h2>
+                </div>
+                <div class="sub-tabs" role="tablist">
+                    <button class="sub-tab active" role="tab" aria-selected="true" data-subtab="drifts">Drifts</button>
+                    <button class="sub-tab" role="tab" aria-selected="false" data-subtab="anomalies">Anomalies</button>
+                    <button class="sub-tab" role="tab" aria-selected="false" data-subtab="alert-rules">Alert Rules</button>
+                </div>
+                <div id="subtab-drifts" class="sub-panel active" aria-live="polite"></div>
+                <div id="subtab-anomalies" class="sub-panel" aria-live="polite"></div>
+                <div id="subtab-alert-rules" class="sub-panel" aria-live="polite"></div>
+            </div>
+
+            <!-- Settings page -->
+            <div id="page-settings" class="page" role="main">
+                <div class="page-header">
+                    <h2>Settings</h2>
+                </div>
+                <div id="settings-content"></div>
+            </div>
+
+            <!-- Billing page -->
+            <div id="page-billing" class="page" role="main">
+                <div class="page-header">
+                    <h2>Billing</h2>
+                </div>
+                <div id="billing-content"></div>
+            </div>
+
+        </main>
+    </div>
+</div>
+<script src="/static/app.js"></script>
+</body>
+</html>
